@@ -14,18 +14,14 @@ console.log('Current environment:', process.env.NODE_ENV);
 console.log('Server starting...');
 
 // Middleware - Must be before routes
-// app.use(cors({
-//   origin: ['https://crypto-tracker-cis-fcf43f67a29f.herokuapp.com/', 'http://localhost:5000', 'http://localhost:3000'],
-//   methods: ['GET', 'POST', 'PUT', 'DELETE'],
-//   credentials: true,
-//   optionsSuccessStatus: 200
-// }));
 app.use(cors({
-  origin: '*',  // Allow all origins temporarily
+  origin: process.env.NODE_ENV === 'production' 
+    ? 'https://crypto-tracker-cis-fcf43f67a29f.herokuapp.com'
+    : ['http://localhost:5000', 'http://localhost:3000'],
   methods: ['GET', 'POST', 'PUT', 'DELETE'],
-  credentials: true
+  credentials: true,
+  optionsSuccessStatus: 200
 }));
-
 
 app.use((req, res, next) => {
   console.log(`Incoming request: ${req.method} ${req.url}`);
