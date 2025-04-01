@@ -11,12 +11,14 @@ const app = express()
 
 // Middleware - Must be before routes
 app.use(cors({
-  origin: process.env.NODE_ENV === 'production'
-      ? ['https://crypto-tracker-cis-d64ce5805b03.herokuapp.com/'] // Update with your frontend URL
-      : 'http://localhost:5000',
+  origin: '*', // for testing
+  // origin: process.env.NODE_ENV === 'production'
+  //     ? ['https://crypto-tracker-cis-d64ce5805b03.herokuapp.com/'] // Update with  frontend URL
+  //     : 'http://localhost:5000',
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE']
 }));
+
 app.use(helmet())
 app.use(express.json())
 app.use(express.urlencoded({ extended: true }))
