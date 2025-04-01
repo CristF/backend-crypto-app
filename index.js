@@ -15,7 +15,7 @@ console.log('Server starting...');
 
 // Middleware - Must be before routes
 app.use(cors({
-  origin: ['https://crypto-tracker-cis-d64ce5805b03.herokuapp.com/', 'http://localhost:5000', 'http://localhost:3000'],
+  origin: ['https://crypto-tracker-cis-fcf43f67a29f.herokuapp.com/', 'http://localhost:5000', 'http://localhost:3000'],
   methods: ['GET', 'POST', 'PUT', 'DELETE'],
   credentials: true,
   optionsSuccessStatus: 200
