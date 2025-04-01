@@ -14,12 +14,18 @@ console.log('Current environment:', process.env.NODE_ENV);
 console.log('Server starting...');
 
 // Middleware - Must be before routes
+// app.use(cors({
+//   origin: ['https://crypto-tracker-cis-fcf43f67a29f.herokuapp.com/', 'http://localhost:5000', 'http://localhost:3000'],
+//   methods: ['GET', 'POST', 'PUT', 'DELETE'],
+//   credentials: true,
+//   optionsSuccessStatus: 200
+// }));
 app.use(cors({
-  origin: ['https://crypto-tracker-cis-fcf43f67a29f.herokuapp.com/', 'http://localhost:5000', 'http://localhost:3000'],
+  origin: '*',  // Allow all origins temporarily
   methods: ['GET', 'POST', 'PUT', 'DELETE'],
-  credentials: true,
-  optionsSuccessStatus: 200
+  credentials: true
 }));
+
 
 app.use((req, res, next) => {
   console.log(`Incoming request: ${req.method} ${req.url}`);
@@ -51,6 +57,15 @@ app.get('/health', (req, res) => {
 // Routes
 app.use('/api/user', userRoute)
 
+app.get('/', (req, res) => {
+  res.json({ 
+    status: 'OK',
+    message: 'Crypto Tracker API is running',
+    env: process.env.NODE_ENV,
+    timestamp: new Date().toISOString()
+  });
+});
+
 // MongoDB Connection
 mongoose.connect(process.env.URI)
   .then(() => {
@@ -68,10 +83,7 @@ app.use((err, req, res, next) => {
   })
 })
 
-// Basic test route
-app.get('/', (req, res) => {
-  res.json({ message: 'Crypto Tracker API is running' })
-})
+
 
 const PORT = process.env.PORT || 5000
 app.listen(PORT, () => {
