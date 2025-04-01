@@ -9,14 +9,16 @@ dotenv.config()
 
 const app = express()
 
+// Add environment logging
+console.log('Current environment:', process.env.NODE_ENV);
+console.log('Server starting...');
+
 // Middleware - Must be before routes
 app.use(cors({
-  origin: '*', // for testing
-  // origin: process.env.NODE_ENV === 'production'
-  //     ? ['https://crypto-tracker-cis-d64ce5805b03.herokuapp.com/'] // Update with  frontend URL
-  //     : 'http://localhost:5000',
+  origin: ['https://crypto-tracker-cis-d64ce5805b03.herokuapp.com', 'http://localhost:5000', 'http://localhost:3000'],
+  methods: ['GET', 'POST', 'PUT', 'DELETE'],
   credentials: true,
-  methods: ['GET', 'POST', 'PUT', 'DELETE']
+  optionsSuccessStatus: 200
 }));
 
 app.use((req, res, next) => {
@@ -32,6 +34,18 @@ app.use(express.urlencoded({ extended: true }))
 app.use((req, res, next) => {
   console.log(`${req.method} ${req.path} - ${new Date().toISOString()}`)
   next()
+});
+
+// Add OPTIONS handling for preflight requests
+app.options('*', cors());
+
+// Add health check route before other routes
+app.get('/health', (req, res) => {
+  res.status(200).json({ 
+    status: 'OK',
+    timestamp: new Date().toISOString(),
+    env: process.env.NODE_ENV
+  });
 });
 
 // Routes
