@@ -14,41 +14,38 @@ console.log('Current environment:', process.env.NODE_ENV);
 console.log('Server starting...');
 
 // Middleware - Must be before routes
-app.use(cors({
-  origin: process.env.NODE_ENV === 'production' 
-    ? 'https://crypto-tracker-cis-fcf43f67a29f.herokuapp.com'
-    : ['http://localhost:5000', 'http://localhost:3000'],
-  methods: ['GET', 'POST', 'PUT', 'DELETE'],
-  credentials: true,
-  optionsSuccessStatus: 200
-}));
+
 
 app.use((req, res, next) => {
   console.log(`Incoming request: ${req.method} ${req.url}`);
   next();
 });
 
+const allowedOrigins = [
+  'https://crypto-tracker-cis-fcf43f67a29f.herokuapp.com',
+  /^http:\/\/localhost:\d+$/, // Allows localhost for development
+];
+
 app.use(helmet())
 app.use(express.json())
+app.use(cors({
+  origin: allowedOrigins,
+  //methods: ['GET', 'POST', 'PUT', 'DELETE'],
+  credentials: true,
+  //optionsSuccessStatus: 200
+}));
 app.use(express.urlencoded({ extended: true }))
 
 // Request logging middleware
-app.use((req, res, next) => {
-  console.log(`${req.method} ${req.path} - ${new Date().toISOString()}`)
-  next()
-});
+// app.use((req, res, next) => {
+//   console.log(`${req.method} ${req.path} - ${new Date().toISOString()}`)
+//   next()
+// });
 
 // Add OPTIONS handling for preflight requests
-app.options('*', cors());
+// app.options('*', cors());
 
-// Add health check route before other routes
-app.get('/health', (req, res) => {
-  res.status(200).json({ 
-    status: 'OK',
-    timestamp: new Date().toISOString(),
-    env: process.env.NODE_ENV
-  });
-});
+
 
 // Routes
 app.use('/api/user', userRoute)
@@ -59,6 +56,14 @@ app.get('/', (req, res) => {
     message: 'Crypto Tracker API is running',
     env: process.env.NODE_ENV,
     timestamp: new Date().toISOString()
+  });
+});
+
+app.get('/health', (req, res) => {
+  res.status(200).json({ 
+    status: 'OK',
+    timestamp: new Date().toISOString(),
+    env: process.env.NODE_ENV
   });
 });
 
