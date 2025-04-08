@@ -27,17 +27,6 @@ try {
     console.error('Error creating email transporter:', error);
     throw new Error('Failed to initialize email transporter');
 }
-//testing wtih ether
-// const testAccount = await nodemailer.createTestAccount();
-// const transporter = nodemailer.createTransport({
-//     host: 'smtp.ethereal.email',
-//     port: 587,
-//     secure: false, // true for 465, false for other ports
-//     auth: {
-//         user: testAccount.user, // generated ethereal user
-//         pass: testAccount.pass, // generated ethereal password
-//     },
-// });
 
 
 const router = express.Router();
@@ -70,6 +59,8 @@ router.post('/register',
             const token = jwt.sign({ email }, process.env.JWT_SECRET, { expiresIn: '1h' });
             
             // Send verification email (to be implemented)
+            const verificationUrl = `${process.env.FRONTEND_URL}/api/user/verify-email?token=${token}`;
+
             const info = await transporter.sendMail({
                 //this ones are for testing with ethereal
                 //from: testAccount.user, // sender address
@@ -77,7 +68,7 @@ router.post('/register',
                 from: process.env.EMAIL_USER,
                 to: email,
                 subject: 'Email Verification',
-                html: `<p>Please verify your email by clicking the link: <a href="http://localhost:5000/api/user/verify-email?token=${token}"> CLICK HERE</a></p>`,
+                html: `<p>Please verify your email by clicking the link: <a href="${verificationUrl}"> ${verificationUrl}</a></p>`,
             });
 
             console.log('Preview URL: %s', nodemailer.getTestMessageUrl(info));
