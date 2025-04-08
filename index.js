@@ -4,6 +4,8 @@ import helmet from 'helmet'
 import dotenv from 'dotenv'
 import mongoose from 'mongoose'
 import userRoute from './api/routes/user.js'
+import cryptoRoute from './api/routes/crypto.js'
+import axios from 'axios'
 
 dotenv.config()
 
@@ -49,6 +51,7 @@ app.use(express.urlencoded({ extended: true }))
 
 // Routes
 app.use('/api/user', userRoute)
+app.use('/api/crypto', cryptoRoute)
 
 app.get('/', (req, res) => {
   res.json({ 

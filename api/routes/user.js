@@ -11,9 +11,7 @@ import nodemailer from 'nodemailer'; // for sending emails
 dotenv.config();
 
 // to complete later
-// import jwt from 'jsonwebtoken';
-// import nodemailer from 'nodemailer'; // for sending emails
-// jwt secret key, to be stored in .env file
+// update email link so that it uses the frontend link instead of localhost:5000
 
 let transporter;
 try {
