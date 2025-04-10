@@ -56,7 +56,7 @@ router.post('/register',
             // Hash the password
             const hashedPassword = await bcrypt.hash(password, 10);
             // Generate a verification token (for email verification)
-            const token = jwt.sign({ email }, process.env.JWT_SECRET, { expiresIn: '1h' });
+            const token = jwt.sign({ email: email }, process.env.JWT_SECRET, { expiresIn: '1h' });
             
             // Send verification email (to be implemented)
             const verificationUrl = `${process.env.FRONTEND_URL}/api/user/verify-email?token=${token}`;
@@ -157,6 +157,56 @@ router.get('/verify-email', async (req, res) => {
     console.log('Token received for verification:', token);
 
     try {
+        // Add token validation check
+        if (token.includes('eyJ') && token.split('.').length !== 3) {
+            return res.status(400).json({ message: 'Invalid token format' });
+        }
+
+        // decode the token to get the email
+        const decoded = jwt.verify(token, process.env.JWT_SECRET);
+        
+        if (!decoded.email) {
+            return res.status(400).json({ message: 'Invalid token payload' });
+        }
+
+        const email = decoded.email;
+        // find the user by email
+        const user = await User.findOne({ email });
+        
+        if (!user) {
+            return res.status(400).json({ message: 'Invalid token' });
+        }
+
+        // check if the user is already verified
+        if (user.isVerified) {
+            return res.status(400).json({ message: 'Email already verified.' });
+        }
+
+        // update the user's isVerified field to true
+        user.isVerified = true;
+        await user.save();
+        
+        console.log('Email verified successfully:', user);
+        res.status(200).json({ message: 'Email verified successfully' });
+
+    } catch (error) {
+        console.error('Error verifying email:', error);
+        if (error.name === 'JsonWebTokenError') {
+            return res.status(400).json({ message: 'Invalid token format' });
+        }
+        res.status(500).json({ message: 'Server error' });
+    }
+});
+
+/*
+router.get('/verify-email', async (req, res) => {
+    const { token } = req.query;
+    if (!token) {
+        return res.status(400).json({ message: 'No token provided' });
+    }
+    console.log('Token received for verification:', token);
+
+    try {
         // decode the token to get the email
         const decoded = jwt.verify(token, process.env.JWT_SECRET);
         const email = decoded.email;
@@ -180,7 +230,8 @@ router.get('/verify-email', async (req, res) => {
         console.error('Error verifying email:', error);
         res.status(500).json({ message: 'Server error' });
     }
-})
+});
+*/
 
 router.post('/forgot-password', async (req, res) => {
     const { email } = req.body;
@@ -201,7 +252,7 @@ router.post('/forgot-password', async (req, res) => {
         console.error('Error in resetting password:', error);
         res.status(500).json({ message: 'Server error' });
     }
-})
+});
 
 router.post('/reset-password', async (req, res) => {
     const { token, newPassword } = req.body;
@@ -223,7 +274,7 @@ router.post('/reset-password', async (req, res) => {
         console.error('Error in resetting password:', error);
         return res.status(400).json({ message: 'Invalid or expired token' });
     }
-})
+});
 
 //module.exports = router;
 export default router;
