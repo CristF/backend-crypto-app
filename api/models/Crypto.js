@@ -32,3 +32,14 @@ const cryptoSchema = new mongoose.Schema({
 cryptoSchema.index({ userId: 1, listName: 1 }, { unique: true });
 
 export default mongoose.model('Crypto', cryptoSchema);
+
+// Update the fetchAllCryptos function
+export const fetchAllCryptos = async () => {
+    try {
+        const response = await api.get('/crypto/saved-cryptos');
+        return response.data;
+    } catch (error) {
+        console.error('Error fetching all cryptos:', error);
+        throw error;
+    }
+};

@@ -62,13 +62,10 @@ router.post('/register',
             const verificationUrl = `${process.env.FRONTEND_URL}/api/user/verify-email?token=${token}`;
 
             const info = await transporter.sendMail({
-                //this ones are for testing with ethereal
-                //from: testAccount.user, // sender address
-                // this ones are for testing with gmail
                 from: process.env.EMAIL_USER,
                 to: email,
                 subject: 'Email Verification',
-                html: `<p>Please verify your email by clicking the link: <a href="${verificationUrl}"> ${verificationUrl}</a></p>`,
+                html: `<p>Please verify your email by clicking the link: <a href="${verificationUrl}" target="_blank" rel="noopener noreferrer">${verificationUrl}</a></p>`,
             });
 
             console.log('Preview URL: %s', nodemailer.getTestMessageUrl(info));
@@ -152,9 +149,31 @@ router.post('/login', [
 router.get('/verify-email', async (req, res) => {
     const { token } = req.query;
     if (!token) {
-        return res.status(400).json({ message: 'No token provided' });
+        return res.status(400).send(`
+            <html>
+                <head>
+                    <style>
+                        body {
+                            font-family: Arial, sans-serif;
+                            display: flex;
+                            flex-direction: column;
+                            align-items: center;
+                            justify-content: center;
+                            height: 100vh;
+                            margin: 0;
+                            background-color: #0864c7;
+                            color: white;
+                            text-align: center;
+                            line-height: 1.6;
+                        }
+                    </style>
+                </head>
+                <body>
+                    <h1>Error: No verification token provided</h1>
+                </body>
+            </html>
+        `);
     }
-    console.log('Token received for verification:', token);
 
     try {
         // Add token validation check
@@ -187,92 +206,118 @@ router.get('/verify-email', async (req, res) => {
         await user.save();
         
         console.log('Email verified successfully:', user);
-        res.status(200).json({ message: 'Email verified successfully' });
+        res.send(`
+            <html>
+                <head>
+                    <style>
+                        body {
+                            font-family: Arial, sans-serif;
+                            display: flex;
+                            flex-direction: column;
+                            align-items: center;
+                            justify-content: center;
+                            height: 100vh;
+                            margin: 0;
+                            background-color: #0864c7;
+                            color: white;
+                            text-align: center;
+                            line-height: 1.6;
+                        }
+                        .message {
+                            font-size: 24px;
+                            margin-bottom: 16px;
+                        }
+                        .sub-message {
+                            font-size: 18px;
+                            opacity: 0.9;
+                        }
+                    </style>
+                </head>
+                <body>
+                    <div class="message">Your email has been verified</div>
+                    <div class="sub-message">You may now close this tab</div>
+                </body>
+            </html>
+        `);
 
     } catch (error) {
         console.error('Error verifying email:', error);
         if (error.name === 'JsonWebTokenError') {
             return res.status(400).json({ message: 'Invalid token format' });
         }
-        res.status(500).json({ message: 'Server error' });
+        res.status(500).send(`
+            <html>
+                <head>
+                    <style>
+                        body {
+                            font-family: Arial, sans-serif;
+                            display: flex;
+                            flex-direction: column;
+                            align-items: center;
+                            justify-content: center;
+                            height: 100vh;
+                            margin: 0;
+                            background-color: #0864c7;
+                            color: white;
+                            text-align: center;
+                            line-height: 1.6;
+                        }
+                    </style>
+                </head>
+                <body>
+                    <h1>Error verifying email</h1>
+                    <p>${error.message}</p>
+                </body>
+            </html>
+        `);
     }
 });
-
-/*
-router.get('/verify-email', async (req, res) => {
-    const { token } = req.query;
-    if (!token) {
-        return res.status(400).json({ message: 'No token provided' });
-    }
-    console.log('Token received for verification:', token);
-
-    try {
-        // decode the token to get the email
-        const decoded = jwt.verify(token, process.env.JWT_SECRET);
-        const email = decoded.email;
-        // find the user by email
-        const user = await User.findOne({ email });
-        
-        if (!user) {
-            return res.status(400).json({ message: 'Invalid token' });
-        }
-        // check if the user is already verified
-        if (user.isVerified) {
-            return res.status(400).json({ message: 'Email already verified.' });
-        }
-        // update the user's isVerified field to true
-        user.isVerified = true;
-        await user.save();
-        console.log('Email verified successfully:', user);
-        res.status(200).json({ message: 'Email verified successfully' });
-
-    } catch (error) {
-        console.error('Error verifying email:', error);
-        res.status(500).json({ message: 'Server error' });
-    }
-});
-*/
 
 router.post('/forgot-password', async (req, res) => {
     const { email } = req.body;
     try {
         const existingUser = await User.findOne({ email });
         if (!existingUser) {
-            return res.status(400).json({ message: 'User not found' });
+            // For security, don't reveal if user exists
+            return res.status(200).json({ 
+                message: 'If an account exists with this email, a password reset link will be sent.' 
+            });
         }
+
         // Generate a password reset token
-        const resetToken = jwt.sign({ id: existingUser._id }, process.env.JWT_SECRET, { expiresIn: '1h' });
-        //to implement : nodemailer to send the reset token to the user's email
+        const resetToken = jwt.sign(
+            { id: existingUser._id }, 
+            process.env.JWT_SECRET, 
+            { expiresIn: '1h' }
+        );
 
-        // Send the reset token to the user's email (not implemented yet)
-        // so for now we will just log it as the api response
-        res.status(200).json({ message: 'Password reset token sent to email', token: resetToken });
-        //
+        // Create password reset URL
+        const resetUrl = `${process.env.FRONTEND_URL}/forgot-password/${resetToken}`;
+
+        // Send the reset token to the user's email
+        const info = await transporter.sendMail({
+            from: process.env.EMAIL_USER,
+            to: email,
+            subject: 'Password Reset Request',
+            html: `
+                <h1>Password Reset Request</h1>
+                <p>You requested a password reset. Click the link below to reset your password:</p>
+                <a href="${resetUrl}">${resetUrl}</a>
+                <p>This link will expire in 1 hour.</p>
+                <p>If you didn't request this, please ignore this email.</p>
+            `
+        });
+
+        console.log('Reset email sent:', info.messageId);
+        res.status(200).json({ 
+            message: 'Password reset link has been sent to your email.' 
+        });
+
     } catch (error) {
-        console.error('Error in resetting password:', error);
-        res.status(500).json({ message: 'Server error' });
-    }
-});
-
-router.post('/reset-password', async (req, res) => {
-    const { token, newPassword } = req.body;
-    try {
-        const decoded = jwt.verify(token, process.env.JWT_SECRET);
-        const userId = await User.findById(decoded.id);
-
-        if(!userId) return res.status(400).json({ message: 'User not found'});
-        // Hash the new password
-        const hashedPassword = await bcrypt.hash(newPassword, 10);
-        //update password
-        userId.password = hashedPassword;
-        await userId.save();
-
-        console.log('Password reset successfully:', userId);
-        res.status(200).json({ message: 'Password reset successfully' });
-    }
-    catch (error) {
-        console.error('Error in resetting password:', error);
-        return res.status(400).json({ message: 'Invalid or expired token' });
+        console.error('Error in forgot password:', error);
+        res.status(500).json({ 
+            message: 'An error occurred while processing your request.' 
+        });
     }
 });
 
