@@ -24,7 +24,9 @@ app.use((req, res, next) => {
 });
 
 const allowedOrigins = [
-  'https://crypto-tracker-cis-fcf43f67a29f.herokuapp.com',
+  //'https://crypto-tracker-cis-fcf43f67a29f.herokuapp.com',
+  'https://crypto-app-backend-izkoy.ondigitalocean.app/',
+  'http://localhost:5173', // vite default port
   /^http:\/\/localhost:\d+$/, // Allows localhost for development
 ];
 
