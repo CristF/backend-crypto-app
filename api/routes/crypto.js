@@ -146,13 +146,43 @@ router.post('/save-crypto', async (req, res) => {
 
 router.get('/saved-cryptos', async (req, res) => {
     try {
-        const cryptos = await CryptoList.find({}, '_id name symbol');
+        // Remove the field restriction to get all data
+        const cryptos = await CryptoList.find({}).select({
+            _id: 1,
+            name: 1,
+            symbol: 1,
+            marketCap: 1,
+            current_price: 1,
+            ath: 1,
+            price_change_24h: 1,
+            high_24h: 1,
+            low_24h: 1,
+            total_volume: 1,
+            circulating_supply: 1,
+            total_supply: 1,
+            max_supply: 1
+        });
+
+        if (!cryptos || cryptos.length === 0) {
+            return res.status(404).json({ message: 'No cryptocurrencies found' });
+        }
+
         res.json(cryptos);
     } catch (error) {
         console.error('Error fetching saved cryptos:', error);
         res.status(500).json({ message: 'Failed to fetch saved cryptos' });
     }
 });
+
+// router.get('/saved-cryptos', async (req, res) => {
+//     try {
+//         const cryptos = await CryptoList.find({}, '_id name symbol');
+//         res.json(cryptos);
+//     } catch (error) {
+//         console.error('Error fetching saved cryptos:', error);
+//         res.status(500).json({ message: 'Failed to fetch saved cryptos' });
+//     }
+// });
 
 // creating a new list for a user
 
