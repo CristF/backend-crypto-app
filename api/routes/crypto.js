@@ -28,28 +28,95 @@ const coingeckoApi = axios.create({
     }
 });
 
-//search for a cryptocurrency by name, returns relevant data
+// Modified search endpoint to return more useful data
 router.get('/search', async (req, res) => {
     try {
         const { query } = req.body;
         if (!query) {
             return res.status(400).json({ message: 'Query parameter is required' });
         }
-        const response = await coingeckoApi.get('/search?query=' + query + '&x_cg_demo_api_key=' + process.env.CG_API_KEY, {
-            params: {
-                query: query
-            }
-        }); 
+        const response = await coingeckoApi.get('/search?query=' + query + '&x_cg_demo_api_key=' + process.env.CG_API_KEY);
         
+        // Return more useful data for frontend
         const coins = response.data.coins.map(coin => ({
             id: coin.id,
+            name: coin.name,
+            symbol: coin.symbol,
+            market_cap_rank: coin.market_cap_rank,
+            thumb: coin.thumb // thumbnail image
         }));
-        res.json(coins);
         
-    }
-    catch (error) {
+        res.json(coins);
+    } catch (error) {
         console.error('Error searching cryptocurrencies:', error.response?.data || error.message);
         res.status(500).json({ message: 'Failed to fetch cryptocurrency data' });
+    }
+});
+
+// New endpoint to search and save in one step
+router.post('/search-and-save', async (req, res) => {
+    try {
+        const { query } = req.body;
+        if (!query) {
+            return res.status(400).json({ message: 'Query parameter is required' });
+        }
+
+        // First search for the coins
+        const searchResponse = await coingeckoApi.get('/search?query=' + query + '&x_cg_demo_api_key=' + process.env.CG_API_KEY);
+        const coinIds = searchResponse.data.coins.map(coin => coin.id);
+
+        // Then get market data and save
+        const marketResponse = await coingeckoApi.get('/coins/markets?' + 'x_cg_demo_api_key=' + process.env.CG_API_KEY, {
+            params: {
+                vs_currency: 'usd',
+                ids: coinIds.join(','),
+                order: 'market_cap_desc',
+                per_page: 100,
+                page: 1,
+                sparkline: false
+            }
+        });
+
+        // Parse and save the data
+        const cryptoData = marketResponse.data.map(coin => ({
+            name: coin.name,
+            symbol: coin.symbol,
+            marketCap: coin.market_cap,
+            current_price: coin.current_price,
+            ath: coin.ath,
+            price_change_24h: coin.price_change_24h,
+            high_24h: coin.high_24h,
+            low_24h: coin.low_24h,
+            total_volume: coin.total_volume,
+            circulating_supply: coin.circulating_supply,
+            total_supply: coin.total_supply || 0,
+            max_supply: coin.max_supply || 0,
+        }));
+
+        const savedCryptos = await Promise.all(
+            cryptoData.map(async crypto => {
+                return await CryptoList.findOneAndUpdate(
+                    { symbol: crypto.symbol },
+                    crypto,
+                    { upsert: true, new: true }
+                );
+            })
+        );
+
+        // Return saved cryptos with their MongoDB IDs
+        const savedRefs = savedCryptos.map(crypto => ({
+            _id: crypto._id,
+            name: crypto.name,
+            symbol: crypto.symbol,
+            current_price: crypto.current_price,
+            price_change_24h: crypto.price_change_24h
+        }));
+
+        res.json(savedRefs);
+
+    } catch (error) {
+        console.error('Error in search and save:', error.response?.data || error.message);
+        res.status(500).json({ message: 'Failed to search and save cryptocurrency data' });
     }
 });
 
@@ -146,7 +213,7 @@ router.post('/save-crypto', async (req, res) => {
 
 router.get('/saved-cryptos', async (req, res) => {
     try {
-        // Remove the field restriction to get all data
+        // First get saved cryptos from database
         const cryptos = await CryptoList.find({}).select({
             _id: 1,
             name: 1,
@@ -167,22 +234,46 @@ router.get('/saved-cryptos', async (req, res) => {
             return res.status(404).json({ message: 'No cryptocurrencies found' });
         }
 
-        res.json(cryptos);
+        // Get IDs for CoinGecko API
+        const coinIds = cryptos.map(crypto => 
+            crypto.name.toLowerCase().replace(/\s+/g, '-')
+        ).join(',');
+
+        // Fetch images from CoinGecko
+        const imageResponse = await coingeckoApi.get('/coins/markets?' + 'x_cg_demo_api_key=' + process.env.CG_API_KEY, {
+            params: {
+                vs_currency: 'usd',
+                ids: coinIds,
+                per_page: 250,
+                sparkline: false
+            }
+        });
+
+        // Create image lookup map
+        const imageMap = imageResponse.data.reduce((acc, coin) => {
+            acc[coin.name] = {
+                image: coin.image,
+                thumb: coin.image.replace('/large/', '/thumb/')
+            };
+            return acc;
+        }, {});
+
+        // Combine database data with images
+        const cryptosWithImages = cryptos.map(crypto => ({
+            ...crypto.toObject(),
+            images: imageMap[crypto.name] || {
+                image: null,
+                thumb: null
+            }
+        }));
+
+        res.json(cryptosWithImages);
     } catch (error) {
         console.error('Error fetching saved cryptos:', error);
         res.status(500).json({ message: 'Failed to fetch saved cryptos' });
     }
 });
 
-// router.get('/saved-cryptos', async (req, res) => {
-//     try {
-//         const cryptos = await CryptoList.find({}, '_id name symbol');
-//         res.json(cryptos);
-//     } catch (error) {
-//         console.error('Error fetching saved cryptos:', error);
-//         res.status(500).json({ message: 'Failed to fetch saved cryptos' });
-//     }
-// });
 
 // creating a new list for a user
 
