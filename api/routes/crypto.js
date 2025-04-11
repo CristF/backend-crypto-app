@@ -384,7 +384,7 @@ router.get('/findListBy/:listId', verifyToken, async (req, res) => {
             });
         }
 
-        // Return detailed list information
+        // Return detailed list information including market cap and volume
         res.json({
             listId: list._id,
             listName: list.listName,
@@ -393,7 +393,10 @@ router.get('/findListBy/:listId', verifyToken, async (req, res) => {
                 name: crypto.cryptoId.name,
                 symbol: crypto.cryptoId.symbol,
                 current_price: crypto.cryptoId.current_price,
-                price_change_24h: crypto.cryptoId.price_change_24h
+                price_change_24h: crypto.cryptoId.price_change_24h,
+                marketCap: crypto.cryptoId.marketCap,
+                total_volume: crypto.cryptoId.total_volume,
+                images: crypto.cryptoId.images
             }))
         });
 
