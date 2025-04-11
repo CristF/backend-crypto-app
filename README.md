@@ -1,3 +1,9 @@
+## Prerequisites
+- Node.js (v18 or higher)
+- npm (v8 or higher)
+- MongoDB Atlas account (for database)
+- CoinGecko API key
+
 There are two repositories you must clone in order to run the project locally, this one, and the front end repository. As of the time of writing this, you can simply access the live site here for easier access and testing: 
 https://crypto-app-frontend-ouiis.ondigitalocean.app/
 
@@ -9,8 +15,7 @@ If the server isnt up and you would like to clone it:
 1. clone the repository into your local files/folder using https, ssh, or the CLI.
 2. navigate to the /backend-crypto-app
 3. run npm install
-
-setting up the .env you would need to let me know in order to have access to the database and API keys, but the following is the format for your backend .env file
+4. create .env file in root directory, you would need to contact me in order to have access to the database and email password, but you can set up your own email or database if youd like. The following is the format for your backend .env file
 
 PORT=5000
 URI = {mongoDB connection string}
