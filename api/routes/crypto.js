@@ -28,13 +28,14 @@ const coingeckoApi = axios.create({
     }
 });
 
-// Modified search endpoint to return more useful data
-router.get('/search', async (req, res) => {
+// Update the search endpoint
+router.post('/search', async (req, res) => {
     try {
         const { query } = req.body;
         if (!query) {
             return res.status(400).json({ message: 'Query parameter is required' });
         }
+        
         const response = await coingeckoApi.get('/search?query=' + query + '&x_cg_demo_api_key=' + process.env.CG_API_KEY);
         
         // Return more useful data for frontend
@@ -43,12 +44,12 @@ router.get('/search', async (req, res) => {
             name: coin.name,
             symbol: coin.symbol,
             market_cap_rank: coin.market_cap_rank,
-            thumb: coin.thumb // thumbnail image
+            thumb: coin.thumb
         }));
         
         res.json(coins);
     } catch (error) {
-        console.error('Error searching cryptocurrencies:', error.response?.data || error.message);
+        console.error('Error searching cryptocurrencies:', error);
         res.status(500).json({ message: 'Failed to fetch cryptocurrency data' });
     }
 });
@@ -120,14 +121,14 @@ router.post('/search-and-save', async (req, res) => {
     }
 });
 
-//then use the id from the search function to get the market data for the coin
-//returns the market data for the coin
+// Update the market data endpoint
 router.get('/search/market', async (req, res) => {
     try {
         const { ids } = req.body;
         if (!ids) {
             return res.status(400).json({ message: 'Ids parameter is required' });
         }
+        
         const response = await coingeckoApi.get('/coins/markets?' + 'x_cg_demo_api_key=' + process.env.CG_API_KEY, {
             params: {
                 vs_currency: 'usd',
@@ -140,11 +141,37 @@ router.get('/search/market', async (req, res) => {
         });
         
         res.json(response.data);
-        
+    } catch (error) {
+        console.error('Error fetching market data:', error);
+        res.status(500).json({ message: 'Failed to fetch market data' });
     }
-    catch (error) {
-        console.error('Error searching cryptocurrencies:', error.response?.data || error.message);
-        res.status(500).json({ message: 'Failed to fetch cryptocurrency data' });
+});
+
+// Update the market data endpoint to handle single ID
+router.get('/search/market/:id', async (req, res) => {
+    try {
+        const id = req.params.id;
+        if (!id) {
+            return res.status(400).json({ message: 'Cryptocurrency ID is required' });
+        }
+        
+        const response = await coingeckoApi.get('/coins/markets?' + 'x_cg_demo_api_key=' + process.env.CG_API_KEY, {
+            params: {
+                vs_currency: 'usd',
+                ids: id,
+                order: 'market_cap_desc',
+                sparkline: false
+            }
+        });
+        
+        if (!response.data || response.data.length === 0) {
+            return res.status(404).json({ message: 'Cryptocurrency not found' });
+        }
+        
+        res.json(response.data[0]); // Return single crypto data
+    } catch (error) {
+        console.error('Error fetching market data:', error);
+        res.status(500).json({ message: 'Failed to fetch market data' });
     }
 });
 
