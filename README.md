@@ -14,8 +14,9 @@ If the server isnt up and you would like to clone it:
 
 1. clone the repository into your local files/folder using https, ssh, or the CLI.
 2. navigate to the /backend-crypto-app
-3. run npm install
-4. create .env file in root directory, you would need to contact me in order to have access to the database and email password, but you can set up your own email or database if youd like. The following is the format for your backend .env file
+3. Have a shell terminal instance open in the directory
+4. run npm install
+5. create .env file in root directory, you would need to contact me in order to have access to the database and email password, but you can set up your own email or database if youd like. The following is the format for your backend .env file
 
 PORT=5000
 URI = {mongoDB connection string}
