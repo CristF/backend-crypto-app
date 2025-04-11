@@ -1,6 +1,9 @@
 There are two repositories you must clone in order to run the project locally, this one, and the front end repository. As of the time of writing this, you can simply access the live site here for easier access and testing: 
 https://crypto-app-frontend-ouiis.ondigitalocean.app/
 
+Here is the backend link if you would like to purely test API calls:
+https://crypto-app-backend-izkoy.ondigitalocean.app/
+
 If the server isnt up and you would like to clone it:
 
 1. clone the repository into your local files/folder using https, ssh, or the CLI.
