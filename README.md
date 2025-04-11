@@ -30,6 +30,13 @@ FRONTEND_URL = http://localhost:5173
 
 
 AI was also used in the creation of this project, namely github's CLAUDE AI in the backend for setting up project folder structure, helping troubleshoot errors in the backend, errors for the API calls, and troubleshooting schema errors. Files that were affected were:
+some prompts that were used:
+
+How do I implement secure JWT authentication and protected routes in Express?
+What's the best MongoDB schema design for storing cryptocurrency data and user lists?
+How do I configure CORS to work with both local development and production domains?
+How do I structure backend environment variables for local and production environments?
+How do I set up and deploy both frontend and backend services on DigitalOcean App Platform?
 
 api/models/Crypto.js
 api/models/CryptoList.js
