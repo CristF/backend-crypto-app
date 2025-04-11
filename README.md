@@ -18,3 +18,12 @@ NODE_ENV = development
 DB_NAME = Crypto_users
 CG_API_KEY = {CG api key}
 FRONTEND_URL = http://localhost:5173
+
+
+AI was also used in the creation of this project, namely github's CLAUDE AI in the backend for setting up project folder structure, helping troubleshoot errors in the backend, errors for the API calls, and troubleshooting schema errors. Files that were affected were:
+
+api/models/Crypto.js
+api/models/CryptoList.js
+
+/api/routes/crypto.js
+/api/routes/user.js
